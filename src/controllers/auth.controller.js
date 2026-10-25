@@ -3,6 +3,7 @@ import sessionModel from "../models/session.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { sendWelcomeEmail } from "../services/email.service.js";
 
 export const registerController = async (req, res) => {
   try {
@@ -29,6 +30,10 @@ export const registerController = async (req, res) => {
       email,
       password: hashedPassword,
     });
+
+   sendWelcomeEmail(user.email, user.name).catch((err) => {
+  console.error('Welcome email failed:', err.message)
+})
 
     const refreshToken = jwt.sign(
       {

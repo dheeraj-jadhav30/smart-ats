@@ -6,7 +6,7 @@ export const authMiddleware =  async (req , res , next) =>{
 
          const decoded = jwt.verify(accessToken , process.env.ACCESS_TOKEN_SECRET)
 
-    req.user = decoded.id 
+        req.user = decoded.id 
 
     next()
     }catch(error) {
