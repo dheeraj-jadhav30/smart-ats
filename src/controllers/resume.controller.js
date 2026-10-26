@@ -2,6 +2,8 @@ import { extractTextFromPDF } from "../services/resume-parser.service.js";
 import {generateResumeAnalysis} from '../services/resume-analysis.services.js'
 import matchReportModel from "../models/matchReport.model.js";
 import mongoose from 'mongoose' // Add at the top if not present
+import userModel from "../models/user.model.js";
+import { sendResumeReportEmail } from "../services/email.service.js";
 
 export const analyzeResume = async (req , res) => {
     try{
@@ -113,8 +115,6 @@ export const historyController = async (req, res) => {
     }
 }
 
-
-
 export const getReportByIdController = async ( req , res) => {
     try{
         const {id} = req.params
@@ -152,8 +152,6 @@ export const getReportByIdController = async ( req , res) => {
     }
 }
 
-
-
 export const deleteReportController = async (req, res) => {
     try {
         const { id } = req.params
@@ -180,6 +178,52 @@ export const deleteReportController = async (req, res) => {
             message: 'Report deleted successfully'
         })
     } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+export const emailReportController = async (req , res) => {
+    try{
+        const {id} = req.params 
+
+        if(!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success:false ,
+                message:"Invalid report Id format"
+            })
+        }
+
+        const report = await matchReportModel.findOne({
+            _id:id ,
+            user:req.user
+        })
+
+        if(!report) {
+            return res.status(404).json({
+                success:false ,
+                message:"Report not found"
+            })
+        }
+
+        const user = await userModel.findById(req.user).select('name email')
+
+        if(!user) {
+            return res.status(404).json({
+                success:false ,
+                message:"user account not found"
+            })
+        }
+
+        await sendResumeReportEmail(user.email , user.name , report)
+
+        return res.status(200).json({
+            success: true,
+            message: `Report has been successfully emailed to ${user.email}`
+        })
+    }catch (error) {
         return res.status(500).json({
             success: false,
             message: error.message

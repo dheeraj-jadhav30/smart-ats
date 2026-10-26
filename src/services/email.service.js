@@ -58,3 +58,51 @@ export const sendWelcomeEmail = async (email, name) => {
   return sendEmail(email, subject, text, html);
 };
 
+export const sendResumeReportEmail = async (email, name, report) => {
+  const subject = `SmartATS Report: ${report.jobTitle} at ${report.companyName} (${report.matchScore}% Match)`
+
+  // Determine score badge color
+  const scoreColor = report.matchScore >= 75 ? '#10b981' : report.matchScore >= 50 ? '#f59e0b' : '#ef4444'
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto; padding: 20px; color: #1f2937; line-height: 1.6; border: 1px solid #e5e7eb; border-radius: 8px;">
+      <h2 style="color: #111827; margin-bottom: 4px;">SmartATS Match Report 🎯</h2>
+      <p style="color: #6b7280; font-size: 14px; margin-top: 0;">Candidate: <strong>${name}</strong></p>
+
+      <div style="background-color: #f9fafb; padding: 16px; border-radius: 6px; margin: 16px 0;">
+        <p style="margin: 4px 0;"><strong>Role:</strong> ${report.jobTitle}</p>
+        <p style="margin: 4px 0;"><strong>Company:</strong> ${report.companyName}</p>
+        <p style="margin: 8px 0;">
+          <strong>Match Score:</strong> 
+          <span style="display: inline-block; background-color: ${scoreColor}; color: white; padding: 4px 12px; border-radius: 9999px; font-weight: bold;">
+            ${report.matchScore}%
+          </span>
+        </p>
+      </div>
+
+      <h3 style="color: #111827;">Executive Summary</h3>
+      <p style="background: #f3f4f6; padding: 12px; border-left: 4px solid #3b82f6; border-radius: 4px;">${report.summary}</p>
+
+      <h3 style="color: #111827;">Matching Skills</h3>
+      <p>${report.matchingSkills?.length ? report.matchingSkills.map(s => `<span style="background: #d1fae5; color: #065f46; padding: 3px 8px; border-radius: 4px; font-size: 13px; margin-right: 6px; display: inline-block; margin-bottom: 4px;">${s}</span>`).join(' ') : 'None detected'}</p>
+
+      <h3 style="color: #111827;">Missing Skills (Target Areas)</h3>
+      <p>${report.missingSkills?.length ? report.missingSkills.map(s => `<span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 13px; margin-right: 6px; display: inline-block; margin-bottom: 4px;">${s}</span>`).join(' ') : 'None'}</p>
+
+      <h3 style="color: #111827;">Actionable Recommendations</h3>
+      <ul>
+        ${report.recommendations?.map(r => `<li>${r}</li>`).join('') || '<li>No specific recommendations</li>'}
+      </ul>
+
+      <h3 style="color: #111827;">Tailored Cover Letter</h3>
+      <div style="background: #f9fafb; padding: 16px; border-radius: 6px; border: 1px dashed #d1d5db; white-space: pre-line;">
+        ${report.tailoredCoverLetter}
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+      <p style="font-size: 12px; color: #9ca3af; text-align: center;">Generated automatically by SmartATS Backend Service.</p>
+    </div>
+  `
+
+  return sendEmail(email, subject, report.summary, html)
+}
